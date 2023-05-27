@@ -1,57 +1,66 @@
-import express from 'express'
-import helmet from 'helmet'
-// import xss from 'xss-clean'
-import mongoSanitize from 'express-mongo-sanitize'
-import compression from 'compression'
-import cors from 'cors'
-// import routes from './routes'
-import { morganSuccessHandler, morganErrorHandler } from './config/morgan.config'
-import { IS_TEST, APP_PREFIX_PATH } from './config/config'
-import httpStatus from 'http-status'
-import ApiError from './utils/ApiError'
-import { errorConverter, errorHandler } from './middleware/error'
-import swaggerUi from 'swagger-ui-express'
+import express, { Express } from 'express';
+import helmet from 'helmet';
+import xss from 'xss-clean';
+import ExpressMongoSanitize from 'express-mongo-sanitize';
+import compression from 'compression';
+import cors from 'cors';
+import passport from 'passport';
+import httpStatus from 'http-status';
+import config from './config/config';
+import { morgan } from './modules/logger';
+import { jwtStrategy } from './modules/auth';
+import { authLimiter } from './modules/utils';
+import { ApiError, errorConverter, errorHandler } from './modules/errors';
+import routes from './routes/v1';
 
-const app = express()
+const app: Express = express();
 
-if (!IS_TEST) {
-  app.use(morganSuccessHandler)
-  app.use(morganErrorHandler)
+if (config.env !== 'test') {
+  app.use(morgan.successHandler);
+  app.use(morgan.errorHandler);
 }
 
 // set security HTTP headers
-app.use(helmet())
+app.use(helmet());
+
+// enable cors
+app.use(cors());
+app.options('*', cors());
 
 // parse json request body
-app.use(express.json())
+app.use(express.json());
 
 // parse urlencoded request body
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 
 // sanitize request data
-// app.use(xss())
-app.use(mongoSanitize())
+app.use(xss());
+app.use(ExpressMongoSanitize());
 
 // gzip compression
-app.use(compression())
+app.use(compression());
 
-app.use(cors())
+// jwt authentication
+app.use(passport.initialize());
+passport.use('jwt', jwtStrategy);
 
-app.get('/', (_req, res) => {
-  res.send('Healthy')
-})
+// limit repeated failed requests to auth endpoints
+if (config.env === 'production') {
+  app.use('/v1/auth', authLimiter);
+}
 
-// app.use(APP_PREFIX_PATH, routes)
+// v1 api routes
+app.use('/v1', routes);
 
 // send back a 404 error for any unknown api request
 app.use((_req, _res, next) => {
-  next(new ApiError(httpStatus.NOT_FOUND, 'Not found'))
-})
+  next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+});
 
 // convert error to ApiError, if needed
-app.use(errorConverter)
+app.use(errorConverter);
 
 // handle error
-app.use(errorHandler)
+app.use(errorHandler);
 
-export default app
+export default app;
