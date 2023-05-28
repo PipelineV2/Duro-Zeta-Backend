@@ -10,7 +10,9 @@ import { IS_TEST, APP_PREFIX_PATH } from './config/config'
 import httpStatus from 'http-status'
 import ApiError from './utils/ApiError'
 import { errorConverter, errorHandler } from './middleware/error'
-import swaggerUi from 'swagger-ui-express'
+import swaggerUi from 'swagger-ui-express';
+import userRoutes from "./routes/user.routes"
+import businessRoutes from "./routes/business.routes"
 
 const app = express()
 
@@ -36,6 +38,10 @@ app.use(mongoSanitize())
 app.use(compression())
 
 app.use(cors())
+
+// routes loaded here
+app.use("/user", userRoutes)
+app.use("/business", businessRoutes)
 
 app.get('/', (_req, res) => {
   res.send('Healthy')
