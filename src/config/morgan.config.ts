@@ -1,5 +1,5 @@
 import morgan from 'morgan'
-import { IS_PRODUCTION } from '@/config/config'
+import { IS_PRODUCTION } from './config'
 import logger from './logger.config'
 
 

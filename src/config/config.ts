@@ -1,4 +1,25 @@
-export const ENVIRONMENT = process.env.APP_ENV || 'dev'
+import dotenv from "dotenv";
+import path from "path"
+
+const getEnvFile = (environment: string | undefined) => {
+  switch (environment) {
+    case "prod":
+      return "prod.env"
+    case "beta":
+      return "beta.env"
+    case "test":
+      return "test.env"
+    case "dev":
+      return ".env"
+    default:
+      return "no env found"
+  }
+}
+dotenv.config({
+  path: path.resolve(__dirname, "..", "..", getEnvFile(process.env.NODE_ENV)),
+})
+
+export const ENVIRONMENT = process.env.NODE_ENV || 'dev'
 export const IS_PRODUCTION = ENVIRONMENT === 'production'
 export const IS_TEST = ENVIRONMENT === 'test'
 export const APP_PORT = Number(process.env.APP_PORT) || 9000
@@ -13,3 +34,4 @@ export const DB = {
   PORT: Number(process.env.DB_PORT) || 27017,
 }
 export const DB_URI = process.env.DB_URI || 'mongodb://localhost:27017/'
+

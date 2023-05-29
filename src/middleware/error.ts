@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import ApiError from '@/utils/ApiError'
+import ApiError from '../utils/ApiError'
 import mongoose from 'mongoose'
 import httpStatus from 'http-status'
-import { IS_PRODUCTION, IS_TEST } from '@/config/config'
-import logger from '@/config/logger.config'
+import { IS_PRODUCTION, IS_TEST } from '../config/config'
+import logger from '../config/logger.config'
 
 export const errorConverter = (err: any, req: any, res: any, next: any) => {
   let error = err
