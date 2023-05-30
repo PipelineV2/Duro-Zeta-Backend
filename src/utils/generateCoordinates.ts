@@ -8,7 +8,7 @@ export async function generateCoordinates(
     url: 'https://ip-geolocation-ipwhois-io.p.rapidapi.com/json/',
 
     headers: {
-      'X-RapidAPI-Key': 'e9f77350eemshfe1ac471c3f2963p1b1854jsn4970638bb009',
+      'X-RapidAPI-Key': process.env.RAPID_API_KEY as string,
       'X-RapidAPI-Host': 'ip-geolocation-ipwhois-io.p.rapidapi.com',
       useQueryString: true,
     },
