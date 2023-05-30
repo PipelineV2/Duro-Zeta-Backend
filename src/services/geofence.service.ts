@@ -32,26 +32,6 @@ export class GeofencingService {
       function toRad(degrees: number): number {
         return degrees * (Math.PI / 180);
       }
-      
-      // Example usage
-      const userLocation: Coordinates = {
-        latitude: 51.5074,
-        longitude: -0.1278,
-      };
-      
-      const businessLocation: Coordinates = {
-        latitude: 51.5123,
-        longitude: -0.1231,
-      };
-      
-      const distance = calculateDistance(userLocation, businessLocation);
-      const radius = 0.5; // 500 meters
-      
-      if (distance <= radius) {
-        console.log("User is within the geofence. Access granted.");
-      } else {
-        console.log("User is outside the geofence. Access denied.");
-      }
 
     }
       
