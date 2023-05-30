@@ -26,6 +26,12 @@ const BusinessSchema = new mongoose.Schema({
     enum: ["active", "inactive", "suspended"],
     default: "inactive"
   },
+  latitude: {
+    type: Number,
+  },
+  longitude: {
+    type: Number,
+  },
   verified: {
     type: Boolean,
     default: false

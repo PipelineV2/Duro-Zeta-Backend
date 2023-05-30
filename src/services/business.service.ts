@@ -1,35 +1,54 @@
-import IBusinessInterface from "../interface/business.interface";
-import userServices from "./user.service";
-import Business from "../models/business.model"
+/* eslint-disable @typescript-eslint/no-var-requires */
+import IBusinessInterface from '../interface/business.interface';
+import userServices from './user.service';
+import Business from '../models/business.model';
+import { generateCoordinates } from '../utils/generateCoordinates';
+import { IRequest } from '../interface/IRequest.interface';
+const requestIp = require('request-ip');
 
-
-const {isAdmin} = userServices
+const { isAdmin } = userServices;
 export default class businessService {
+  static async createBusiness(
+    userId: string,
+    businessData: IBusinessInterface,
+    req: IRequest
+  ): Promise<IBusinessInterface> {
+    try {
+      const adminUser = await isAdmin(userId);
+      if (adminUser) {
+        // generate coordinates
+        const ip = requestIp.getClientIp(req);
+        const coordinates = await generateCoordinates(ip);
 
-  static async createBusiness(userId: string, businessData: IBusinessInterface): Promise<IBusinessInterface> {
-    const adminUser = await isAdmin(userId)
-    if(adminUser) {
-      // create business
-      businessData.adminId = userId
-      const newBusiness = await Business.create(businessData) as any;
-      return {
-        adminId: newBusiness.adminId,
-        name: newBusiness.name,
-        logo: newBusiness.logo,
-        description: newBusiness.description,
-        location: newBusiness.location,
-        verified: newBusiness.verified,
-        status: newBusiness.status
+        // create business
+        businessData.adminId = userId;
+        const newBusiness = (await Business.create(businessData)) as any;
+        return {
+          adminId: newBusiness.adminId,
+          name: newBusiness.name,
+          logo: newBusiness.logo,
+          description: newBusiness.description,
+          location: newBusiness.location,
+          verified: newBusiness.verified,
+          status: newBusiness.status,
+          latitude: businessData.latitude || coordinates.lat,
+          longitude: businessData.longitude || coordinates.lon,
+        };
+      } else {
+        throw Error("sorry, you can't create a business");
       }
-    } else {
-      throw Error("sorry, you can't create a business")
+    } catch (error) {
+      console.log(error);
+      throw new Error(error.message);
     }
   }
 
-  static async getBusinessData(businessId: string): Promise<IBusinessInterface> {
+  static async getBusinessData(
+    businessId: string
+  ): Promise<IBusinessInterface> {
     try {
-      const business = await Business.findById(businessId) as any
-      if(business) {
+      const business = (await Business.findById(businessId)) as any;
+      if (business) {
         return {
           adminId: business.adminId,
           name: business.name,
@@ -37,33 +56,38 @@ export default class businessService {
           description: business.description,
           location: business.location,
           verified: business.verified,
-          status: business.status
-        }
+          status: business.status,
+          latitude: business.latitude,
+          longitude: business.longitude,
+        };
       }
     } catch (error) {
-      throw Error(error)
+      throw Error(error);
     }
   }
 
-  static async updateBusiness(userId: string, businessId: string, updateData: Partial<IBusinessInterface>): Promise<IBusinessInterface> {
+  static async updateBusiness(
+    userId: string,
+    businessId: string,
+    updateData: Partial<IBusinessInterface>
+  ): Promise<IBusinessInterface> {
     try {
       const adminUser = isAdmin(userId);
-      if(adminUser) {
-        const business = await Business.findById(businessId) as any;
-        if(business) {
-          if(updateData.description && updateData.location) {
+      if (adminUser) {
+        const business = (await Business.findById(businessId)) as any;
+        if (business) {
+          if (updateData.description && updateData.location) {
             updateData.verified = true;
-            updateData.status = "active"
+            updateData.status = 'active';
           }
-          await Business.findByIdAndUpdate(businessId, {...updateData});
-          return Business.findById(businessId)
+          await Business.findByIdAndUpdate(businessId, { ...updateData });
+          return Business.findById(businessId);
         }
       } else {
-        throw Error("sorry, you can't edit a business info")
+        throw Error("sorry, you can't edit a business info");
       }
-      
     } catch (error) {
-      throw Error(error)
+      throw Error(error);
     }
   }
 }

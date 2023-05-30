@@ -18,6 +18,9 @@ const getEnvFile = (environment: string | undefined) => {
 dotenv.config({
   path: path.resolve(__dirname, "..", "..", getEnvFile(process.env.NODE_ENV)),
 })
+export class config {
+  RAPID_API_KEY = process.env.RAPID_API_KEY || 'no rapid api key'
+}
 
 export const ENVIRONMENT = process.env.NODE_ENV || 'dev'
 export const IS_PRODUCTION = ENVIRONMENT === 'production'
@@ -34,4 +37,5 @@ export const DB = {
   PORT: Number(process.env.DB_PORT) || 27017,
 }
 export const DB_URI = process.env.DB_URI || 'mongodb://localhost:27017/'
+export const RAPID_API_KEY = process.env.RAPID_API_KEY || 'no rapid api key'
 
