@@ -7,7 +7,7 @@ const {authenticate} = Authentication
 
 const router = Router();
 router.get("/:businessId", getBusiness)
-router.post('/create', authenticate, createNewBusiness);
+router.post('/create', authenticate,  createNewBusiness);
 router.patch("/:businessId/update", authenticate, updateBusiness)
 
 
