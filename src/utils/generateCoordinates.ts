@@ -1,5 +1,12 @@
 import axios from 'axios';
 
+// import dotenv from 'dotenv';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require('dotenv').config();
+
+
+
 export async function generateCoordinates(
   ip: string
 ): Promise<{ lat: number; lon: number }> {
