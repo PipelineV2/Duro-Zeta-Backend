@@ -32,9 +32,9 @@ export default class businessService {
           status: newBusiness.status,
           location: {
             address: businessData.location.address,
-            latitude: businessData.latitude || coordinates.lat,
-            longitude: businessData.longitude || coordinates.lon,
-          }
+            latitude: businessData.location.latitude || coordinates.lat,
+            longitude: businessData.location.longitude || coordinates.lon,
+          },
         };
       } else {
         throw Error("sorry, you can't create a business");
@@ -56,11 +56,13 @@ export default class businessService {
           name: business.name,
           logo: business.logo,
           description: business.description,
-          location: business.location,
+          location: {
+            address: business.location.address,
+            latitude: business.location.latitude,
+            longitude: business.location.longitude,
+          },
           verified: business.verified,
           status: business.status,
-          latitude: business.latitude,
-          longitude: business.longitude,
         };
       }
     } catch (error) {

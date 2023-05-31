@@ -11,6 +11,4 @@ export default interface IBusinessInterface{
   createdAt?: Date
   verified?: boolean
   status: string
-  latitude?: number
-  longitude?: number
 }
