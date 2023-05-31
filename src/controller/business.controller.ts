@@ -18,7 +18,7 @@ export default class businessController {
         });
       }
     } catch (error) {
-      res.status(403).json({
+      return res.status(403).json({
         error: error.message,
       });
     }
@@ -38,7 +38,7 @@ export default class businessController {
         });
       }
     } catch (error) {
-      res.status(403).json({
+      return res.status(403).json({
         error: error.message,
       });
     }
@@ -53,8 +53,8 @@ export default class businessController {
         data: business,
       });
     } catch (error) {
-      res.status(40).json({
-        error: 'error.messagnot found',
+      return res.status(40).json({
+        error: error.message || 'not found',
       });
     }
   }

@@ -28,11 +28,13 @@ export default class businessService {
           name: newBusiness.name,
           logo: newBusiness.logo,
           description: newBusiness.description,
-          location: newBusiness.location,
           verified: newBusiness.verified,
           status: newBusiness.status,
-          latitude: businessData.latitude || coordinates.lat,
-          longitude: businessData.longitude || coordinates.lon,
+          location: {
+            address: businessData.location.address,
+            latitude: businessData.latitude || coordinates.lat,
+            longitude: businessData.longitude || coordinates.lon,
+          }
         };
       } else {
         throw Error("sorry, you can't create a business");

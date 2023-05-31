@@ -19,18 +19,23 @@ const BusinessSchema = new mongoose.Schema({
     type: String
   },
   location: {
-    type: String,
+    address: {
+      type: String,
+      required: true
+    },
+    latitude: {
+      type: Number,
+      required: true
+    },
+    longitude: {
+      type: Number,
+      required: true
+    }
   },
   status: {
     type: String,
     enum: ["active", "inactive", "suspended"],
     default: "inactive"
-  },
-  latitude: {
-    type: Number,
-  },
-  longitude: {
-    type: Number,
   },
   verified: {
     type: Boolean,
