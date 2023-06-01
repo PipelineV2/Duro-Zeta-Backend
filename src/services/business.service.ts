@@ -1,3 +1,5 @@
+
+import QRCode from "qrcode";
 /* eslint-disable @typescript-eslint/no-var-requires */
 import IBusinessInterface from '../interface/business.interface';
 import userServices from './user.service';
@@ -5,8 +7,14 @@ import Business from '../models/business.model';
 import { generateCoordinates } from '../utils/generateCoordinates';
 import { IRequest } from '../interface/IRequest.interface';
 const requestIp = require('request-ip');
+import queueService from "./queue.service";
+import IQueueInterface from "../interface/queue.interface";
 
-const { isAdmin } = userServices;
+const {isAdmin, findUserById} = userServices;
+const {createQueue} = queueService
+// const apiBaseUrl = process.env.BASE_URL
+const webUrl = process.env.WEB_BASEURL
+
 export default class businessService {
   static async createBusiness(
     userId: string,
@@ -52,6 +60,7 @@ export default class businessService {
       const business = (await Business.findById(businessId)) as any;
       if (business) {
         return {
+          id: business._id,
           adminId: business.adminId,
           name: business.name,
           logo: business.logo,
@@ -66,7 +75,7 @@ export default class businessService {
         };
       }
     } catch (error) {
-      throw Error(error);
+      throw error
     }
   }
 
@@ -77,10 +86,10 @@ export default class businessService {
   ): Promise<IBusinessInterface> {
     try {
       const adminUser = isAdmin(userId);
-      if (adminUser) {
-        const business = (await Business.findById(businessId)) as any;
-        if (business) {
-          if (updateData.description && updateData.location) {
+      if(adminUser) {
+        const business = await Business.findById(businessId) as any;
+        if(business && business.userId.toString() === userId.toString()) {
+          if(updateData.description && updateData.location) {
             updateData.verified = true;
             updateData.status = 'active';
           }
@@ -91,7 +100,44 @@ export default class businessService {
         throw Error("sorry, you can't edit a business info");
       }
     } catch (error) {
-      throw Error(error);
+      throw error
     }
   }
+
+  static async qRCodeGenerator(businessId:string, adminId: string, howLong?: number) : Promise<IQueueInterface> {
+    try {
+      const adminUser = isAdmin(adminId);
+      if(adminUser) {
+        const url = `${webUrl}/login?business=${businessId}`
+        const qrCode = await QRCode.toDataURL(url);
+        // create queue
+        const queue = await createQueue(businessId, qrCode, howLong)
+        return queue as IQueueInterface
+      } else {
+        throw Error("sorry, you can't perform this action")
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  static async verifyBusiness(userId: string, businessId: string): Promise<boolean> {
+    try {
+      const user = await findUserById(userId);
+      if(user && user.role === "client") {
+        const business = await this.getBusinessData(businessId);
+        if(business && business.verified) {
+          return true
+        } else {
+          return false
+        }
+      } else {
+        throw Error("you can't take this action")
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  
 }

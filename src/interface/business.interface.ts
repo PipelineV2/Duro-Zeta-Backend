@@ -1,4 +1,5 @@
 export default interface IBusinessInterface{
+  id?: string
   name: string,
   logo: string,
   description: string,
