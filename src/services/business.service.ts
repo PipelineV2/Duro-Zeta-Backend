@@ -30,7 +30,10 @@ export default class businessService {
 
         // create business
         businessData.adminId = userId;
-        const newBusiness = (await Business.create(businessData)) as any;
+        // businessData.location.address = 
+        businessData.location.latitude = coordinates.lat,
+        businessData.location.longitude = coordinates.lon
+        const newBusiness = await Business.create(businessData) as any;
         return {
           adminId: newBusiness.adminId,
           name: newBusiness.name,
@@ -40,8 +43,8 @@ export default class businessService {
           status: newBusiness.status,
           location: {
             address: businessData.location.address,
-            latitude: businessData.location.latitude || coordinates.lat,
-            longitude: businessData.location.longitude || coordinates.lon,
+            latitude: businessData.location.latitude,
+            longitude: businessData.location.longitude
           },
         };
       } else {
