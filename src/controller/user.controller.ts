@@ -3,8 +3,11 @@ import { Request, Response } from "express";
 import IUserInterface from "../interface/user.interface"
 import userServices from "../services/user.service"
 import {generateToken} from "../utils/generateToken"
+import { IRequest } from "../interface/IRequest.interface";
+import businessService from "../services/business.service";
 
-const {findUser, createNewUser} = userServices
+const {findUser, createNewUser} = userServices;
+const {verifyBusiness} = businessService
 
 export default class userController {
   static async signin(req: Request, res: Response): Promise<any> {
@@ -35,4 +38,27 @@ export default class userController {
       throw Error("please enter login info")
     }
   }
+
+  // static async joinQueue(req: IRequest, res: Response) {
+  //   try {
+  //     const {id} = req.decoded;
+  //     const {businessId} = req.params;
+  //     const businessVerified = await verifyBusiness(id, businessId);
+  //     if(businessVerified) {
+  //       // join queue algorithm goes here
+  //       return res.status(200).json({
+  //         message: "joined a queue",
+  //         data: businessVerified
+  //       })
+  //     } else {
+  //       return res.status(403).json({
+  //         message: "not a valid QR code!"
+  //       })
+  //     }
+      
+  //   } catch (error) {
+  //     throw Error(error)
+  //   }
+
+  // }
 }

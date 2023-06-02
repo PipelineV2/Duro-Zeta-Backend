@@ -26,6 +26,7 @@ export async function generateCoordinates(
 
   try {
     const response = await axios.request(options);
+    // console.log("response data =>", response.data)
     const { latitude, longitude } = response.data;
     return { lat: latitude, lon: longitude };
   } catch (error) {
