@@ -27,6 +27,47 @@ export default class queueService {
       throw error
     }
   }
+
+  static async joinQueue(userId: string, queueId: string): Promise<IQueueInterface> {
+    try {
+      // Check if the queue exists and is open
+      const queue = await Queue.findById(queueId) as any;
+      if (queue && queue.status === "open") {
+        // Check if the user is already in the queue
+        const existingUser = await queue.users.find(
+          (user: any) => user.userId.toString() === userId.toString()
+        ) as any;
+        if (existingUser) {
+          throw new Error("You are already in the queue");
+        }
+
+        // check if the user is within the fence
+        
+  
+        // Create a new queue user entry
+        const updatedQueue = await Queue.updateOne(
+          { _id: queueId },
+          {
+            $push: {
+              users: {
+                userId,
+                position: queue.users.length + 1,
+              },
+            },
+          }
+        )
+
+        console.log("updated queue =>", updatedQueue)
+  
+        return updatedQueue;
+      } else {
+        throw new Error("The queue is not open or does not exist");
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+  
 }
 
 /**

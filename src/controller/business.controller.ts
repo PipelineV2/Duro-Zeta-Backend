@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import businessService from '../services/business.service';
 import { IRequest } from '../interface/IRequest.interface';
 
-
-const {createBusiness, getBusinessData, updateBusiness, qRCodeGenerator} = businessService;
+const { createBusiness, getBusinessData, updateBusiness, qRCodeGenerator } =
+  businessService;
 export default class businessController {
   static async createNewBusiness(req: IRequest, res: Response): Promise<any> {
     try {
@@ -45,33 +45,33 @@ export default class businessController {
   }
 
   static async getBusiness(req: Request, res: Response): Promise<any> {
-   try {
-    const {businessId} = req.params;
-    const business = await getBusinessData(businessId);
-    return res.status(200).json({
-      message: "business data received",
-      data: business
-    })
-   } catch (error) {
-    res.status(400).json({
-      message: "not found"
-    })  
-   } 
+    try {
+      const { businessId } = req.params;
+      const business = await getBusinessData(businessId);
+      return res.status(200).json({
+        message: 'business data received',
+        data: business,
+      });
+    } catch (error) {
+      res.status(400).json({
+        message: 'not found',
+      });
+    }
   }
 
   static async generateQRCode(req: IRequest, res: Response): Promise<any> {
     try {
-    const {id} = req.decoded;
-    const {businessId} = req.params;
-    const qrCode = await qRCodeGenerator(businessId, id)
+      const { id } = req.decoded;
+      const { businessId } = req.params;
+      const qrCode = await qRCodeGenerator(businessId, id);
       return res.status(200).json({
-       message: "Qrcode generated successfully",
-       data: qrCode
-     })
+        message: 'Qrcode generated successfully',
+        data: qrCode,
+      });
     } catch (error) {
       return res.status(400).json({
-       message: error.message
-     })  
-    } 
-   }
+        message: error.message,
+      });
+    }
+  }
 }
