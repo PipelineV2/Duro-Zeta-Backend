@@ -5,7 +5,7 @@ import userServices from "../services/user.service"
 import {generateToken} from "../utils/generateToken"
 import { IRequest } from "../interface/IRequest.interface";
 import businessService from "../services/business.service";
-import queueService from "@/services/queue.service";
+import queueService from "../services/queue.service";
 
 const {findUser, createNewUser} = userServices;
 const {verifyBusiness} = businessService

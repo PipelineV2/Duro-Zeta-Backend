@@ -2,14 +2,14 @@ import Queue from '../models/queue.model';
 import IQueueInterface, {
   JoinQueueResponse,
 } from '../interface/queue.interface';
-import { calculateDistance } from '@/utils/geofence';
-import { generateCoordinates } from '@/utils/generateCoordinates';
+import { calculateDistance } from '../utils/geofence';
+import { generateCoordinates } from '../utils/generateCoordinates';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const requestIp = require('request-ip');
 import Business from '../models/business.model';
 import { IRequest } from '@/interface/IRequest.interface';
 import { Server, Socket } from 'socket.io';
-import userModel from '@/models/user.model';
+import userModel from '../models/user.model';
 
 export default class queueService {
   static async createQueue(
