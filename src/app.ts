@@ -14,7 +14,19 @@ import swaggerUi from 'swagger-ui-express';
 import userRoutes from "./routes/user.routes"
 import businessRoutes from "./routes/business.routes"
 
+import http from 'http';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
+
+
+
 const app = express()
+
+const server = createServer(app);
+
+
+const io = new Server(server);
+
 
 if (!IS_TEST) {
   app.use(morganSuccessHandler)
@@ -59,5 +71,7 @@ app.use(errorConverter)
 
 // handle error
 app.use(errorHandler)
+
+
 
 export default app

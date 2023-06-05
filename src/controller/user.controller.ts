@@ -5,9 +5,11 @@ import userServices from "../services/user.service"
 import {generateToken} from "../utils/generateToken"
 import { IRequest } from "../interface/IRequest.interface";
 import businessService from "../services/business.service";
+import queueService from "@/services/queue.service";
 
 const {findUser, createNewUser} = userServices;
 const {verifyBusiness} = businessService
+const { joinQueue } = queueService
 
 export default class userController {
   static async signin(req: Request, res: Response): Promise<any> {
@@ -39,26 +41,22 @@ export default class userController {
     }
   }
 
-  // static async joinQueue(req: IRequest, res: Response) {
-  //   try {
-  //     const {id} = req.decoded;
-  //     const {businessId} = req.params;
-  //     const businessVerified = await verifyBusiness(id, businessId);
-  //     if(businessVerified) {
-  //       // join queue algorithm goes here
-  //       return res.status(200).json({
-  //         message: "joined a queue",
-  //         data: businessVerified
-  //       })
-  //     } else {
-  //       return res.status(403).json({
-  //         message: "not a valid QR code!"
-  //       })
-  //     }
-      
-  //   } catch (error) {
-  //     throw Error(error)
-  //   }
+  static async joinQueue(req: IRequest, res: Response): Promise<any> {
+    try {
+      const userId = req.decoded.id;
+      const {queueId} = req.params;
+        // join queue algorithm goes here
+        const queue = await joinQueue(userId, queueId, req)
+        return res.status(200).json({
+          message: "you have joined the queue",
+          data: queue
+        })
+       
 
-  // }
+      
+    } catch (error) {
+      throw Error(error)
+    }
+
+  }
 }

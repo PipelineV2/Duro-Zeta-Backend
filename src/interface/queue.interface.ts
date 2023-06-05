@@ -6,3 +6,9 @@ export default interface IQueueInterface{
   duration: Date,
   status: "closed" | "open"
 }
+
+export interface JoinQueueResponse {
+  // queue: IQueueInterface,
+  position: number
+  message: string
+}
