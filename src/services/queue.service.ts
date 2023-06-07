@@ -94,7 +94,7 @@ export default class queueService {
         if (distance <= radius) {
           console.log('User is within the geofence. Access granted.');
           // Create a new queue user entry
-          const updatedQueue = await Queue.updateOne(
+          await Queue.updateOne(
             { _id: queueId },
             {
               $push: {
@@ -107,13 +107,10 @@ export default class queueService {
             }
           );
 
-          console.log('updated queue =>', updatedQueue);
-
           return {
             message: `You have been added to the queue, your position is ${
               queue.users.length + 1
             }`,
-            // queue: updatedQueue,
             position: queue.users.length + 1,
           };
         } else {
@@ -127,61 +124,61 @@ export default class queueService {
     }
   }
 
-  public static setup(io: Server): void {
-    io.on('connection', (socket: Socket) => {
-      socket.on(
-        'userAttended',
-        async (userId: string, queueId: string, req: IRequest) => {
-          try {
-            await this.attendUser(userId, queueId, req);
+  // public static setup(io: Server): void {
+  //   io.on('connection', (socket: Socket) => {
+  //     socket.on(
+  //       'userAttended',
+  //       async (userId: string, queueId: string, req: IRequest) => {
+  //         try {
+  //           await this.attendUser(userId, queueId, req);
 
-            io.emit('queueUpdated', this.getQueue(queueId));
-          } catch (error) {
-            socket.emit('attendUserError', error.message);
-            throw error;
-          }
-        }
-      );
+  //           io.emit('queueUpdated', this.getQueue(queueId));
+  //         } catch (error) {
+  //           socket.emit('attendUserError', error.message);
+  //           throw error;
+  //         }
+  //       }
+  //     );
 
-      socket.on(
-        'locationUpdate',
-        (
-          userId: string,
-          coordinates: { lat: number; lon: number },
-          queueId: string
-        ) => {
-          // Check if the user is outside the geofence
-          const isOutsideGeofence = !this.isInsideGeofence(
-            coordinates,
-            queueId
-          ); // true or false
+  //     socket.on(
+  //       'locationUpdate',
+  //       (
+  //         userId: string,
+  //         coordinates: { lat: number; lon: number },
+  //         queueId: string
+  //       ) => {
+  //         // Check if the user is outside the geofence
+  //         const isOutsideGeofence = !this.isInsideGeofence(
+  //           coordinates,
+  //           queueId
+  //         ); // true or false
 
-          if (isOutsideGeofence) {
-            try {
-              // Remove the user from the queue
-              this.removeUserFromQueue(userId, queueId);
+  //         if (isOutsideGeofence) {
+  //           try {
+  //             // Remove the user from the queue
+  //             this.removeUserFromQueue(userId, queueId);
 
-              // Emit the updated queue to all connected clients
-              io.emit('queueUpdated', this.getQueue(queueId));
-            } catch (error) {
-              console.error(error);
-              socket.emit('userLeftGeofenceError', error.message);
-            }
-          }
-        }
-      );
+  //             // Emit the updated queue to all connected clients
+  //             io.emit('queueUpdated', this.getQueue(queueId));
+  //           } catch (error) {
+  //             console.error(error);
+  //             socket.emit('userLeftGeofenceError', error.message);
+  //           }
+  //         }
+  //       }
+  //     );
 
-      socket.on('userExitedQueue', (userId: string, queueId: string) => {
-        try {
-          this.removeUserFromQueue(userId, queueId);
-          io.emit('queueUpdated', this.getQueue(queueId));
-        } catch (error) {
-          console.error(error);
-          socket.emit('userExitedQueueError', error.message);
-        }
-      });
-    });
-  }
+  //     socket.on('userExitedQueue', (userId: string, queueId: string) => {
+  //       try {
+  //         this.removeUserFromQueue(userId, queueId);
+  //         io.emit('queueUpdated', this.getQueue(queueId));
+  //       } catch (error) {
+  //         console.error(error);
+  //         socket.emit('userExitedQueueError', error.message);
+  //       }
+  //     });
+  //   });
+  // }
 
   static async attendUser(
     userId: string,
