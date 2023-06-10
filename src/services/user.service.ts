@@ -1,3 +1,4 @@
+import { IRequest } from "@/interface/IRequest.interface";
 import IUserInterface from "../interface/user.interface";
 import User from "../models/user.model";
 
@@ -62,5 +63,6 @@ export default class userServices {
       throw Error(error)
     }
   }
+
 
 }

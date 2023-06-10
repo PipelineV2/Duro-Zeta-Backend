@@ -11,6 +11,7 @@ import { IRequest } from '../interface/IRequest.interface';
 const requestIp = require('request-ip');
 import queueService from './queue.service';
 import IQueueInterface from '../interface/queue.interface';
+import { calculateDistance } from '../utils/geofence';
 
 const { isAdmin, findUserById } = userServices;
 const { createQueue } = queueService;
@@ -26,33 +27,33 @@ export default class businessService {
     try {
       const adminUser = await isAdmin(userId);
       if (adminUser) {
-      // generate coordinates
-      const ip = requestIp.getClientIp(req);
-      const coordinates = await generateCoordinates(ip);
-      // generate address
-      const address = await reverseGeocode(coordinates.lat, coordinates.lon);
+        // generate coordinates
+        const ip = requestIp.getClientIp(req);
+        const coordinates = await generateCoordinates(ip);
+        // generate address
+        const address = await reverseGeocode(coordinates.lat, coordinates.lon);
 
-      // create business
-      businessData.adminId = userId;
-      businessData.location = {
-        address: address[0].formattedAddress,
-        latitude: coordinates.lat,
-        longitude: coordinates.lon,
-      };
-      const newBusiness = (await Business.create(businessData)) as any;
-      return {
-        adminId: newBusiness.adminId,
-        name: newBusiness.name,
-        logo: newBusiness.logo,
-        description: newBusiness.description,
-        verified: newBusiness.verified,
-        status: newBusiness.status,
-        location: {
-          address: businessData.location.address,
-          latitude: businessData.location.latitude,
-          longitude: businessData.location.longitude,
-        },
-      };
+        // create business
+        businessData.adminId = userId;
+        businessData.location = {
+          address: address[0].formattedAddress,
+          latitude: coordinates.lat,
+          longitude: coordinates.lon,
+        };
+        const newBusiness = (await Business.create(businessData)) as any;
+        return {
+          adminId: newBusiness.adminId,
+          name: newBusiness.name,
+          logo: newBusiness.logo,
+          description: newBusiness.description,
+          verified: newBusiness.verified,
+          status: newBusiness.status,
+          location: {
+            address: businessData.location.address,
+            latitude: businessData.location.latitude,
+            longitude: businessData.location.longitude,
+          },
+        };
       } else {
         throw Error("sorry, you can't create a business");
       }
@@ -61,7 +62,6 @@ export default class businessService {
       throw new Error(error.message);
     }
   }
-
 
   static async getBusinessData(
     businessId: string
@@ -153,6 +153,75 @@ export default class businessService {
       }
     } catch (error) {
       throw error;
+    }
+  }
+
+  static async findBusinessesCloseToUser(
+    userId: string,
+    req: IRequest
+  ): Promise<any> {
+    try {
+      const user = await userServices.findUserById(userId);
+
+      if (!user) {
+        throw new Error('user not found');
+      }
+
+      const ip = requestIp.getClientIp(req);
+      const coordinates = await generateCoordinates(ip);
+
+      const usersCoordinates = {
+        latitude: coordinates.lat,
+        longitude: coordinates.lon,
+      };
+
+      //get all businesses where the status is active and verified is true
+      const businesses = await Business.find(
+        { verified: true },
+        {
+          _id: 1,
+          name: 1,
+          logo: 1,
+          description: 1,
+          'location.latitude': 1,
+          'location.longitude': 1,
+        }
+      );
+
+      const businessesCoordinates = businesses
+        .filter((business: any) => {
+          return business.location.latitude && business.location.longitude;
+        })
+        .map((business: any) => {
+          return {
+            latitude: business.location.latitude,
+            longitude: business.location.longitude,
+          };
+        });
+
+      // calculate distance between user and each business
+      const distances = businessesCoordinates.map((businessCoordinates) => {
+        return calculateDistance(usersCoordinates, businessCoordinates);
+      });
+
+      // return businesses within 500 meters
+      const radius = 0.5; // 500 meters
+      const closeBusinesses = distances
+        .filter((distance) => distance <= radius)
+        .map((distance) => {
+          return businesses[distances.indexOf(distance)];
+        });
+
+      if (closeBusinesses.length < 0) {
+        throw new Error('No business found close to you');
+      }
+      return {
+        message: 'businesses close to you',
+        data: closeBusinesses,
+        status: 'success',
+      };
+    } catch (error) {
+      throw Error(error.message);
     }
   }
 }
