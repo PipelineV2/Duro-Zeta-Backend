@@ -224,4 +224,21 @@ export default class businessService {
       throw Error(error.message);
     }
   }
+
+  // search for businesses by name
+  static async searchBusinessesByName(
+    name: string
+  ): Promise<IBusinessInterface[]> {
+    try {
+      const businesses = (await Business.find({
+        name: { $regex: name, $options: 'i' },
+      })) as any;
+      if (businesses.length < 1) {
+        throw new Error('No business found');
+      }
+      return businesses;
+    } catch (error) {
+      throw Error(error.message);
+    }
+  }
 }

@@ -76,4 +76,20 @@ export default class userController {
       });
     }
   }
+
+  // search for a businesses by name
+  static async searchBusinesses(req: IRequest, res: Response): Promise<any> {
+    try {
+      const { name } = req.params;
+      const businesses = await businessService.searchBusinessesByName(name);
+      return res.status(200).json({
+        message: 'list of businesses',
+        data: businesses,
+      });
+    } catch (error) {
+      res.status(401).json({
+        message: error.message,
+      });
+    }
+  }
 }
