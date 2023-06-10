@@ -1,6 +1,21 @@
 import mongoose, { Schema } from 'mongoose';
 
-const BusinessSchema = new mongoose.Schema({
+const LocationSchema = new Schema({
+  address: {
+    type: String,
+    required: true
+  },
+  latitude: {
+    type: Number,
+    required: true
+  },
+  longitude: {
+    type: Number,
+    required: true
+  }
+});
+
+const BusinessSchema = new Schema({
   adminId: {
     type: Schema.Types.ObjectId,
     required: true,
@@ -18,20 +33,7 @@ const BusinessSchema = new mongoose.Schema({
   description: {
     type: String
   },
-  location: {
-    address: {
-      type: String,
-      required: true
-    },
-    latitude: {
-      type: Number,
-      required: true
-    },
-    longitude: {
-      type: Number,
-      required: true
-    }
-  },
+  location: LocationSchema, // Nested location schema
   status: {
     type: String,
     enum: ["active", "inactive", "suspended"],
@@ -46,4 +48,7 @@ const BusinessSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-export default mongoose.model('Business', BusinessSchema);
+
+const Business = mongoose.model('Business', BusinessSchema);
+
+export default Business;

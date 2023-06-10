@@ -1,19 +1,23 @@
-
-import QRCode from "qrcode";
+import QRCode from 'qrcode';
 /* eslint-disable @typescript-eslint/no-var-requires */
 import IBusinessInterface from '../interface/business.interface';
 import userServices from './user.service';
 import Business from '../models/business.model';
-import { generateCoordinates } from '../utils/generateCoordinates';
+import {
+  generateCoordinates,
+  reverseGeocode,
+} from '../utils/generateCoordinates';
 import { IRequest } from '../interface/IRequest.interface';
 const requestIp = require('request-ip');
-import queueService from "./queue.service";
-import IQueueInterface from "../interface/queue.interface";
+import queueService from './queue.service';
+import IQueueInterface from '../interface/queue.interface';
+import { calculateDistance } from '../utils/geofence';
+import queueModel from '../models/queue.model';
 
-const {isAdmin, findUserById} = userServices;
-const {createQueue} = queueService
+const { isAdmin, findUserById } = userServices;
+const { createQueue } = queueService;
 // const apiBaseUrl = process.env.BASE_URL
-const webUrl = process.env.WEB_BASEURL
+const webUrl = process.env.WEB_BASEURL;
 
 export default class businessService {
   static async createBusiness(
@@ -27,13 +31,17 @@ export default class businessService {
         // generate coordinates
         const ip = requestIp.getClientIp(req);
         const coordinates = await generateCoordinates(ip);
+        // generate address
+        const address = await reverseGeocode(coordinates.lat, coordinates.lon);
 
         // create business
         businessData.adminId = userId;
-        // businessData.location.address = 
-        businessData.location.latitude = coordinates.lat,
-        businessData.location.longitude = coordinates.lon
-        const newBusiness = await Business.create(businessData) as any;
+        businessData.location = {
+          address: address[0].formattedAddress,
+          latitude: coordinates.lat,
+          longitude: coordinates.lon,
+        };
+        const newBusiness = (await Business.create(businessData)) as any;
         return {
           adminId: newBusiness.adminId,
           name: newBusiness.name,
@@ -44,7 +52,7 @@ export default class businessService {
           location: {
             address: businessData.location.address,
             latitude: businessData.location.latitude,
-            longitude: businessData.location.longitude
+            longitude: businessData.location.longitude,
           },
         };
       } else {
@@ -60,8 +68,10 @@ export default class businessService {
     businessId: string
   ): Promise<IBusinessInterface> {
     try {
-      const business = (await Business.findById(businessId)) as any;
+      const business = await Business.findById(businessId) as any;
       if (business) {
+        const activeQueue = await queueModel.findOne({businessId, status: "open"}) as any;
+        
         return {
           id: business._id,
           adminId: business.adminId,
@@ -75,10 +85,11 @@ export default class businessService {
           },
           verified: business.verified,
           status: business.status,
+          queue: activeQueue || null
         };
       }
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
@@ -89,10 +100,10 @@ export default class businessService {
   ): Promise<IBusinessInterface> {
     try {
       const adminUser = isAdmin(userId);
-      if(adminUser) {
-        const business = await Business.findById(businessId) as any;
-        if(business && business.userId.toString() === userId.toString()) {
-          if(updateData.description && updateData.location) {
+      if (adminUser) {
+        const business = (await Business.findById(businessId)) as any;
+        if (business && business.adminId.toString() === userId.toString()) {
+          if (updateData.description) {
             updateData.verified = true;
             updateData.status = 'active';
           }
@@ -103,44 +114,135 @@ export default class businessService {
         throw Error("sorry, you can't edit a business info");
       }
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
-  static async qRCodeGenerator(businessId:string, adminId: string, howLong?: number) : Promise<IQueueInterface> {
+  static async qRCodeGenerator(
+    businessId: string,
+    adminId: string,
+    howLong?: number
+  ): Promise<IQueueInterface> {
     try {
       const adminUser = isAdmin(adminId);
-      if(adminUser) {
-        const url = `${webUrl}/login?business=${businessId}`
+      if (adminUser) {
+        const url = `${webUrl}/login?business=${businessId}`;
         const qrCode = await QRCode.toDataURL(url);
         // create queue
-        const queue = await createQueue(businessId, qrCode, howLong)
-        return queue as IQueueInterface
+        const queue = await createQueue(businessId, qrCode, howLong);
+        return queue as IQueueInterface;
       } else {
-        throw Error("sorry, you can't perform this action")
+        throw Error("sorry, you can't perform this action");
       }
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
-  static async verifyBusiness(userId: string, businessId: string): Promise<boolean> {
+  static async verifyBusiness(
+    userId: string,
+    businessId: string
+  ): Promise<boolean> {
     try {
       const user = await findUserById(userId);
-      if(user && user.role === "client") {
+      if (user && user.role === 'client') {
         const business = await this.getBusinessData(businessId);
-        if(business && business.verified) {
-          return true
+        if (business && business.verified) {
+          return true;
         } else {
-          return false
+          return false;
         }
       } else {
-        throw Error("you can't take this action")
+        throw Error("you can't take this action");
       }
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
-  
+  static async findBusinessesCloseToUser(
+    userId: string,
+    req: IRequest
+  ): Promise<any> {
+    try {
+      const user = await userServices.findUserById(userId);
+
+      if (!user) {
+        throw new Error('user not found');
+      }
+
+      const ip = requestIp.getClientIp(req);
+      const coordinates = await generateCoordinates(ip);
+
+      const usersCoordinates = {
+        latitude: coordinates.lat,
+        longitude: coordinates.lon,
+      };
+
+      //get all businesses where the status is active and verified is true
+      const businesses = await Business.find(
+        { verified: true },
+        {
+          _id: 1,
+          name: 1,
+          logo: 1,
+          description: 1,
+          'location.latitude': 1,
+          'location.longitude': 1,
+        }
+      );
+
+      const businessesCoordinates = businesses
+        .filter((business: any) => {
+          return business.location.latitude && business.location.longitude;
+        })
+        .map((business: any) => {
+          return {
+            latitude: business.location.latitude,
+            longitude: business.location.longitude,
+          };
+        });
+
+      // calculate distance between user and each business
+      const distances = businessesCoordinates.map((businessCoordinates) => {
+        return calculateDistance(usersCoordinates, businessCoordinates);
+      });
+
+      // return businesses within 500 meters
+      const radius = 0.5; // 500 meters
+      const closeBusinesses = distances
+        .filter((distance) => distance <= radius)
+        .map((distance) => {
+          return businesses[distances.indexOf(distance)];
+        });
+
+      if (closeBusinesses.length < 0) {
+        throw new Error('No business found close to you');
+      }
+      return {
+        message: 'businesses close to you',
+        data: closeBusinesses,
+        status: 'success',
+      };
+    } catch (error) {
+      throw Error(error.message);
+    }
+  }
+
+  // search for businesses by name
+  static async searchBusinessesByName(
+    name: string
+  ): Promise<IBusinessInterface[]> {
+    try {
+      const businesses = (await Business.find({
+        name: { $regex: name, $options: 'i' },
+      })) as any;
+      if (businesses.length < 1) {
+        throw new Error('No business found');
+      }
+      return businesses;
+    } catch (error) {
+      throw Error(error.message);
+    }
+  }
 }
