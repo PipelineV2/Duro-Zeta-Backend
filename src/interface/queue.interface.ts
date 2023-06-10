@@ -9,7 +9,7 @@ export default interface IQueueInterface{
 }
 
 export interface JoinQueueResponse {
-  // queue: IQueueInterface,
+  queue: IQueueInterface,
   position: number
   message: string
 }

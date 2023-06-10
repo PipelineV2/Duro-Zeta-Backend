@@ -6,7 +6,7 @@ const {createNewBusiness, updateBusiness, getBusiness, generateQRCode} = busines
 const {authenticate} = Authentication
 
 const router = Router();
-router.get('/:businessId', authenticate, getBusiness)
+router.get('/:businessId', getBusiness)
 router.post('/create', authenticate, createNewBusiness);
 router.post('/:businessId/qrcode/generate', authenticate, generateQRCode )
 router.patch('/:businessId/update', authenticate, updateBusiness)

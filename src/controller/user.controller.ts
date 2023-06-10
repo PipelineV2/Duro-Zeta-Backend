@@ -9,14 +9,16 @@ import queueService from '../services/queue.service';
 
 const { findUser, createNewUser } = userServices;
 const { verifyBusiness, findBusinessesCloseToUser } = businessService;
-const { joinQueue } = queueService;
+const { joinQueue, getQueue, queueMemberPosition } = queueService
 
 export default class userController {
   static async signin(req: Request, res: Response): Promise<any> {
     let data = req.body as IUserInterface;
-    const role = req.query;
-    if (data.email) {
-      // check user exist
+    // check user exist
+    console.log("data =>", req, data)
+    const role = req.query 
+    if(data.email) {
+      // check user exist 
       let user = await findUser(data.email);
       if (!user) {
         // create user record
@@ -53,8 +55,26 @@ export default class userController {
       });
     } catch (error) {
       res.status(401).json({
-        message: error.message,
-      });
+        message: error.message
+      })
+    }
+  }
+
+  static async positionOnQueue (req: IRequest, res: Response): Promise<any> {
+    try {
+      const userId = req.decoded.id;
+      const {queueId} = req.params;
+      const queue = await getQueue(queueId);
+      console.log("queue =>", queue)
+      const position = await queueMemberPosition(userId, queue.members);
+      const text = `${position > 1 ? `You are now number ${position} on the queue. Prepare to be attnded to` : `You are next in line. Prepare to be attended to.` }`
+      return res.status(200).json({
+        message: text
+      })
+    } catch (error) {
+      res.status(401).json({
+        message: error.message
+      }) 
     }
   }
 

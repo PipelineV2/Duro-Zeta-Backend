@@ -12,6 +12,7 @@ const requestIp = require('request-ip');
 import queueService from './queue.service';
 import IQueueInterface from '../interface/queue.interface';
 import { calculateDistance } from '../utils/geofence';
+import queueModel from '../models/queue.model';
 
 const { isAdmin, findUserById } = userServices;
 const { createQueue } = queueService;
@@ -67,8 +68,10 @@ export default class businessService {
     businessId: string
   ): Promise<IBusinessInterface> {
     try {
-      const business = (await Business.findById(businessId)) as any;
+      const business = await Business.findById(businessId) as any;
       if (business) {
+        const activeQueue = await queueModel.findOne({businessId, status: "open"}) as any;
+        
         return {
           id: business._id,
           adminId: business.adminId,
@@ -82,6 +85,7 @@ export default class businessService {
           },
           verified: business.verified,
           status: business.status,
+          queue: activeQueue || null
         };
       }
     } catch (error) {

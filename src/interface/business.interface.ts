@@ -1,3 +1,4 @@
+import IQueueInterface from "./queue.interface"
 export default interface IBusinessInterface{
   id?: string
   name: string,
@@ -11,5 +12,6 @@ export default interface IBusinessInterface{
   adminId?: string,
   createdAt?: Date
   verified?: boolean
-  status: string
+  status: string,
+  queue?: IQueueInterface
 }

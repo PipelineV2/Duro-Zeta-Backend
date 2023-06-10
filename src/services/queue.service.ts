@@ -81,10 +81,18 @@ export default class queueService {
 
         if (distance <= radius) {
           console.log('User is within the geofence. Access granted.');
-          const addUserToQueue = await this.addUserToQueue(userId, queue._id)
+
+          let members: string[] = [];
+          if(queue.members.length) {
+            members = [...members, userId]
+          } else {
+            members = [userId]
+          }
+          const updatedQueue = await Queue.findByIdAndUpdate( { _id: queue._id }, { members }, { new: true }) as IQueueInterface;
           return {
-            message: `You have been added to the queue, your position is ${addUserToQueue.members.length}`,
-            position: addUserToQueue.members.length,
+            message: `You have been added to the queue, your position is ${members.length}`,
+            position: members.length,
+            queue: updatedQueue
           };
         } else {
           throw new Error('Access denied. Move closer to the business.');
@@ -176,7 +184,12 @@ export default class queueService {
       let queue = await Queue.findById(queueId) as any;
       queue = {
         id: queue._id,
-        ...queue
+        businessId: queue.businessId,
+        qrcode: queue.qrcode,
+        members: queue.members,
+        status: queue.status,
+        createdAt: queue.createdAt,
+        endsAt: queue.endsAt
       };
       delete queue._id
       const queueData = queue as IQueueInterface
