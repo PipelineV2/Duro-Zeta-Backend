@@ -44,18 +44,18 @@ export default class userController {
   static async joinQueue(req: IRequest, res: Response): Promise<any> {
     try {
       const userId = req.decoded.id;
-      const {queueId} = req.params;
+      const {businessId} = req.params;
         // join queue algorithm goes here
-        const queue = await joinQueue(userId, queueId, req)
+        const queue = await joinQueue(userId, businessId, req)
         return res.status(200).json({
           message: "you have joined the queue",
           data: queue
         })
-       
-
-      
     } catch (error) {
-      throw Error(error)
+      res.status(401).json({
+        message: error.message
+      })
+
     }
 
   }

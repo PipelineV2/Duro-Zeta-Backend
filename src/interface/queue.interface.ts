@@ -1,6 +1,7 @@
 export default interface IQueueInterface{
   id?: string
   qrcode: string,
+  businessId: string
   members: string[],
   createdAt: Date,
   duration: Date,

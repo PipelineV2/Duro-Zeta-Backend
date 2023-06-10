@@ -6,18 +6,16 @@ import compression from 'compression'
 import cors from 'cors'
 // import routes from './routes'
 import { morganSuccessHandler, morganErrorHandler } from './config/morgan.config'
-import { IS_TEST, APP_PREFIX_PATH } from './config/config'
+import { IS_TEST } from './config/config'
 import httpStatus from 'http-status'
 import ApiError from './utils/ApiError'
 import { errorConverter, errorHandler } from './middleware/error'
-import swaggerUi from 'swagger-ui-express';
 import userRoutes from "./routes/user.routes"
 import businessRoutes from "./routes/business.routes"
 
-import http from 'http';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-
+import {updateQueueStatus} from "../src/services/cron.service"
 
 
 const app = express()
@@ -66,6 +64,7 @@ app.use((_req, _res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, 'Not found'))
 })
 
+updateQueueStatus();
 // convert error to ApiError, if needed
 app.use(errorConverter)
 

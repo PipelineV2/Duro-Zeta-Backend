@@ -18,7 +18,7 @@ const QueueSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  duration: {
+  endsAt: {
     type: Date,
   },
   status: {

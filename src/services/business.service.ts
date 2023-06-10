@@ -98,8 +98,8 @@ export default class businessService {
       const adminUser = isAdmin(userId);
       if (adminUser) {
         const business = (await Business.findById(businessId)) as any;
-        if (business && business.userId.toString() === userId.toString()) {
-          if (updateData.description && updateData.location) {
+        if (business && business.adminId.toString() === userId.toString()) {
+          if (updateData.description) {
             updateData.verified = true;
             updateData.status = 'active';
           }
